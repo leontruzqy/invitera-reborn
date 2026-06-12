@@ -1,0 +1,67 @@
+# Development stack: API with hot reload + Vite dev servers for web/admin.
+# The dev database is a local SQLite file stored in the `sqlite_data` volume
+# (mounted at /data, DATABASE_URL=file:/data/dev.db). Turso is NOT used in dev.
+#
+#   docker compose -f docker-compose.dev.yml up --build
+#
+#   web    -> http://localhost:5173
+#   admin  -> http://localhost:5174
+#   api    -> http://localhost:3000
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    image: invitera-dev
+    command: sh -c "bun run db:migrate && bun run db:seed && bun run dev:api"
+    environment:
+      DATABASE_URL: file:/data/dev.db
+      JWT_SECRET: ${JWT_SECRET:-dev-secret-change-me}
+      CORS_ORIGINS: http://localhost:5173,http://localhost:5174
+      PORT: "3000"
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./apps/api/src:/app/apps/api/src
+      - ./packages/db/src:/app/packages/db/src
+      - ./packages/db/migrations:/app/packages/db/migrations
+      - ./packages/shared/src:/app/packages/shared/src
+      - sqlite_data:/data
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    image: invitera-dev
+    command: bun run dev:web
+    environment:
+      VITE_API_URL: http://localhost:3000
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./apps/web/src:/app/apps/web/src
+      - ./apps/web/index.html:/app/apps/web/index.html
+      - ./packages/shared/src:/app/packages/shared/src
+    depends_on:
+      - api
+
+  admin:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    image: invitera-dev
+    command: bun run dev:admin
+    environment:
+      VITE_API_URL: http://localhost:3000
+      VITE_WEB_URL: http://localhost:5173
+    ports:
+      - "5174:5174"
+    volumes:
+      - ./apps/admin/src:/app/apps/admin/src
+      - ./apps/admin/index.html:/app/apps/admin/index.html
+      - ./packages/shared/src:/app/packages/shared/src
+    depends_on:
+      - api
+
+volumes:
+  sqlite_data:

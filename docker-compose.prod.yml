@@ -1,0 +1,59 @@
+# Production stack: API (Bun) + static web/admin served by nginx.
+# The database is Turso — set DATABASE_URL + TURSO_AUTH_TOKEN in .env.
+#
+#   cp .env.example .env   # fill in DATABASE_URL, TURSO_AUTH_TOKEN, JWT_SECRET
+#   docker compose -f docker-compose.prod.yml up -d --build
+#   docker compose -f docker-compose.prod.yml run --rm api bun run db:migrate
+#   docker compose -f docker-compose.prod.yml run --rm api bun run db:seed
+#
+#   web    -> http://localhost:${WEB_PORT:-8080}
+#   admin  -> http://localhost:${ADMIN_PORT:-8081}
+#
+# The api container is not published; web/admin nginx proxy /api to it.
+services:
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: ${DATABASE_URL:?Set DATABASE_URL to your Turso libsql:// URL}
+      TURSO_AUTH_TOKEN: ${TURSO_AUTH_TOKEN:-}
+      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET to a long random string}
+      CORS_ORIGINS: ${CORS_ORIGINS:-}
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "bun",
+          "-e",
+          "fetch('http://localhost:3000/health').then((r) => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      # VITE_API_URL defaults to "" = same origin; nginx proxies /api -> api:3000
+    restart: unless-stopped
+    ports:
+      - "${WEB_PORT:-8080}:80"
+    depends_on:
+      - api
+
+  admin:
+    build:
+      context: .
+      dockerfile: apps/admin/Dockerfile
+      args:
+        # Lets the admin link to live invitation pages (e.g. https://inv.example.com)
+        VITE_WEB_URL: ${PUBLIC_WEB_URL:-}
+    restart: unless-stopped
+    ports:
+      - "${ADMIN_PORT:-8081}:80"
+    depends_on:
+      - api

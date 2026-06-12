@@ -1,0 +1,23 @@
+{
+  "name": "invitera",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "bun --filter './apps/*' dev",
+    "dev:web": "bun run --cwd apps/web dev",
+    "dev:admin": "bun run --cwd apps/admin dev",
+    "dev:api": "bun run --cwd apps/api dev",
+    "db:generate": "bun run --cwd packages/db generate",
+    "db:migrate": "bun run --cwd packages/db migrate",
+    "db:seed": "bun run --cwd packages/db seed",
+    "build": "bun run --cwd apps/web build && bun run --cwd apps/admin build",
+    "start": "bun run --cwd apps/api start"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  }
+}
