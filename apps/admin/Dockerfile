@@ -1,6 +1,7 @@
 # Production image for the admin dashboard (Vite build -> nginx)
 # Build from the repo root: docker build -f apps/admin/Dockerfile .
-FROM oven/bun:1 AS build
+# bun must be >= 1.3 — 1.2.4 miscompiles Vue templates, breaking `vite build`.
+FROM oven/bun:1.3.14 AS build
 WORKDIR /app
 
 COPY package.json bun.lock ./

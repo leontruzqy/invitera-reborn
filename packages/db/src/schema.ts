@@ -2,6 +2,8 @@ import { relations } from 'drizzle-orm';
 import { integer, real, sqliteTable, text } from 'drizzle-orm/sqlite-core';
 import {
   ATTENDANCE_STATUSES,
+  GIFT_ACCOUNT_TYPES,
+  MEDIA_SLOTS,
   MEDIA_TYPES,
   ORDER_STATUSES,
   PACKAGE_TYPES,
@@ -58,13 +60,67 @@ export const invitations = sqliteTable('invitations', {
   slug: text('slug').notNull().unique(),
   brideName: text('bride_name').notNull(),
   groomName: text('groom_name').notNull(),
+  brideShortName: text('bride_short_name'),
+  groomShortName: text('groom_short_name'),
+  brideParents: text('bride_parents'),
+  groomParents: text('groom_parents'),
+  brideTagline: text('bride_tagline'),
+  groomTagline: text('groom_tagline'),
   eventDate: integer('event_date', { mode: 'timestamp_ms' }),
   venueName: text('venue_name'),
   venueAddress: text('venue_address'),
   mapsUrl: text('maps_url'),
-  templateKey: text('template_key', { enum: TEMPLATE_KEYS }).notNull().default('modern-minimal'),
+  openingGreeting: text('opening_greeting'),
+  verseArabic: text('verse_arabic'),
+  verseTranslation: text('verse_translation'),
+  verseReference: text('verse_reference'),
+  closingMessage: text('closing_message'),
+  hashtag: text('hashtag'),
+  rsvpDeadline: integer('rsvp_deadline', { mode: 'timestamp_ms' }),
+  templateKey: text('template_key', { enum: TEMPLATE_KEYS }).notNull().default('rani-raka'),
   themeConfigJson: text('theme_config_json').notNull().default('{}'),
   isPublished: integer('is_published', { mode: 'boolean' }).notNull().default(false),
+  createdAt: createdAt(),
+});
+
+export const invitationEvents = sqliteTable('invitation_events', {
+  id: id(),
+  invitationId: integer('invitation_id')
+    .notNull()
+    .references(() => invitations.id, { onDelete: 'cascade' }),
+  name: text('name').notNull(),
+  eventDate: integer('event_date', { mode: 'timestamp_ms' }),
+  timeLabel: text('time_label'),
+  venueName: text('venue_name'),
+  venueAddress: text('venue_address'),
+  mapsUrl: text('maps_url'),
+  sortOrder: integer('sort_order').notNull().default(0),
+  createdAt: createdAt(),
+});
+
+export const loveStoryEvents = sqliteTable('love_story_events', {
+  id: id(),
+  invitationId: integer('invitation_id')
+    .notNull()
+    .references(() => invitations.id, { onDelete: 'cascade' }),
+  title: text('title').notNull(),
+  whenLabel: text('when_label'),
+  description: text('description').notNull(),
+  sortOrder: integer('sort_order').notNull().default(0),
+  createdAt: createdAt(),
+});
+
+export const giftAccounts = sqliteTable('gift_accounts', {
+  id: id(),
+  invitationId: integer('invitation_id')
+    .notNull()
+    .references(() => invitations.id, { onDelete: 'cascade' }),
+  type: text('type', { enum: GIFT_ACCOUNT_TYPES }).notNull().default('bank'),
+  bankName: text('bank_name'),
+  accountNumber: text('account_number'),
+  accountName: text('account_name'),
+  address: text('address'),
+  sortOrder: integer('sort_order').notNull().default(0),
   createdAt: createdAt(),
 });
 
@@ -110,6 +166,7 @@ export const mediaAssets = sqliteTable('media_assets', {
     .notNull()
     .references(() => invitations.id, { onDelete: 'cascade' }),
   type: text('type', { enum: MEDIA_TYPES }).notNull().default('image'),
+  slot: text('slot', { enum: MEDIA_SLOTS }).notNull().default('gallery'),
   url: text('url').notNull(),
   altText: text('alt_text'),
   sortOrder: integer('sort_order').notNull().default(0),
@@ -135,6 +192,30 @@ export const invitationsRelations = relations(invitations, ({ one, many }) => ({
   rsvps: many(rsvps),
   wishes: many(wishes),
   media: many(mediaAssets),
+  events: many(invitationEvents),
+  story: many(loveStoryEvents),
+  gifts: many(giftAccounts),
+}));
+
+export const invitationEventsRelations = relations(invitationEvents, ({ one }) => ({
+  invitation: one(invitations, {
+    fields: [invitationEvents.invitationId],
+    references: [invitations.id],
+  }),
+}));
+
+export const loveStoryEventsRelations = relations(loveStoryEvents, ({ one }) => ({
+  invitation: one(invitations, {
+    fields: [loveStoryEvents.invitationId],
+    references: [invitations.id],
+  }),
+}));
+
+export const giftAccountsRelations = relations(giftAccounts, ({ one }) => ({
+  invitation: one(invitations, {
+    fields: [giftAccounts.invitationId],
+    references: [invitations.id],
+  }),
 }));
 
 export const guestsRelations = relations(guests, ({ one, many }) => ({
@@ -165,3 +246,6 @@ export type GuestRow = typeof guests.$inferSelect;
 export type RsvpRow = typeof rsvps.$inferSelect;
 export type WishRow = typeof wishes.$inferSelect;
 export type MediaAssetRow = typeof mediaAssets.$inferSelect;
+export type InvitationEventRow = typeof invitationEvents.$inferSelect;
+export type LoveStoryEventRow = typeof loveStoryEvents.$inferSelect;
+export type GiftAccountRow = typeof giftAccounts.$inferSelect;

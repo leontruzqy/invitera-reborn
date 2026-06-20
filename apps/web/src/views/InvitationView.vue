@@ -4,7 +4,8 @@ import { computed, onMounted, ref } from 'vue';
 import { RouterLink, useRoute } from 'vue-router';
 import CoverOverlay from '../components/CoverOverlay.vue';
 import { ApiError, fetchInvitation } from '../lib/api';
-import { templateRegistry } from '../templates/registry';
+import { prefersReducedMotion } from '../composables/useSmoothScroll';
+import { fallbackTemplate, templateRegistry } from '../templates/registry';
 
 const route = useRoute();
 
@@ -12,12 +13,22 @@ const invitation = ref<PublicInvitation | null>(null);
 const error = ref<string | null>(null);
 const loading = ref(true);
 const opened = ref(false);
+const coverGone = ref(false);
 
 const SelectedTemplate = computed(() =>
   invitation.value
-    ? (templateRegistry[invitation.value.templateKey] ?? templateRegistry['modern-minimal'])
+    ? (templateRegistry[invitation.value.templateKey] ?? fallbackTemplate)
     : null,
 );
+
+// Opening the cover starts the hero gate animation; once the cover has slid
+// away (1.2s, matching the design) we unmount it so scrolling is unblocked.
+function handleOpen() {
+  if (opened.value) return;
+  opened.value = true;
+  const delay = prefersReducedMotion() ? 0 : 1200;
+  setTimeout(() => (coverGone.value = true), delay);
+}
 
 onMounted(async () => {
   const slug = String(route.params.slug ?? '');
@@ -37,7 +48,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div :class="['min-h-screen', !opened && invitation ? 'h-screen overflow-hidden' : '']">
+  <div :class="['min-h-screen', !coverGone && invitation ? 'h-screen overflow-hidden' : '']">
     <div v-if="loading" class="flex min-h-screen items-center justify-center bg-stone-100">
       <p class="animate-pulse text-xs tracking-[0.3em] text-stone-400 uppercase">
         Memuat undangan…
@@ -55,13 +66,18 @@ onMounted(async () => {
       </RouterLink>
     </div>
 
-    <template v-else-if="invitation">
-      <!-- Dynamic template rendering by template_key -->
-      <component :is="SelectedTemplate" :invitation="invitation" />
+    <component
+      v-else-if="invitation"
+      :is="SelectedTemplate"
+      :invitation="invitation"
+      :opened="opened"
+    />
 
-      <Transition name="cover">
-        <CoverOverlay v-if="!opened" :invitation="invitation" @open="opened = true" />
-      </Transition>
-    </template>
+    <CoverOverlay
+      v-if="invitation && !coverGone"
+      :invitation="invitation"
+      :gone="opened"
+      @open="handleOpen"
+    />
   </div>
 </template>

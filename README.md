@@ -27,11 +27,11 @@ bun db:seed           # admin user + sample customer/order/invitation
 bun dev               # api :3000, web :5173, admin :5174
 ```
 
-- Web: http://localhost:5173 — sample invitation at [`/aisyah-raka`](http://localhost:5173/aisyah-raka)
+- Web: http://localhost:5173 — sample invitation at [`/rani-raka`](http://localhost:5173/rani-raka)
 - Admin: http://localhost:5174 — login `admin@invitera.local` / `admin12345`
 - API: http://localhost:3000/health
 
-Personalized guest link (pre-fills the RSVP form): `http://localhost:5173/aisyah-raka?guest=budi-santoso-x7f2`
+Personalized guest link (pre-fills the RSVP form): `http://localhost:5173/rani-raka?guest=budi-santoso-x7f2`
 
 ## Quick start (Docker dev)
 

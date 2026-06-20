@@ -2,8 +2,11 @@ import type {
   AdminStats,
   AuthUser,
   Customer,
+  GiftAccount,
   Guest,
   Invitation,
+  InvitationEvent,
+  LoveStoryEvent,
   MediaAsset,
   Order,
   Rsvp,
@@ -46,8 +49,36 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   return data as T;
 }
 
-export type InvitationDetail = Invitation & { guests: Guest[]; media: MediaAsset[] };
+export type InvitationDetail = Invitation & {
+  guests: Guest[];
+  media: MediaAsset[];
+  events: InvitationEvent[];
+  story: LoveStoryEvent[];
+  gifts: GiftAccount[];
+};
 export type RsvpWithGuest = Rsvp & { guest: Guest | null };
+
+/** CRUD for a nested invitation child resource (events, story, gifts, media). */
+function childResource<T>(sub: string) {
+  return {
+    list: (invitationId: number) =>
+      request<T[]>(`/api/admin/invitations/${invitationId}/${sub}`),
+    create: (invitationId: number, payload: Record<string, unknown>) =>
+      request<T>(`/api/admin/invitations/${invitationId}/${sub}`, {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      }),
+    update: (invitationId: number, childId: number, payload: Record<string, unknown>) =>
+      request<T>(`/api/admin/invitations/${invitationId}/${sub}/${childId}`, {
+        method: 'PATCH',
+        body: JSON.stringify(payload),
+      }),
+    remove: (invitationId: number, childId: number) =>
+      request<{ ok: boolean }>(`/api/admin/invitations/${invitationId}/${sub}/${childId}`, {
+        method: 'DELETE',
+      }),
+  };
+}
 
 export const api = {
   login: (email: string, password: string) =>
@@ -108,6 +139,11 @@ export const api = {
       ),
     wishes: (id: number) => request<Wish[]>(`/api/admin/invitations/${id}/wishes`),
   },
+
+  events: childResource<InvitationEvent>('events'),
+  story: childResource<LoveStoryEvent>('story'),
+  gifts: childResource<GiftAccount>('gifts'),
+  media: childResource<MediaAsset>('media'),
 
   wishes: {
     setStatus: (id: number, status: WishStatus) =>

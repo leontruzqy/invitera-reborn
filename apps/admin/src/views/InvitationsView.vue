@@ -148,7 +148,7 @@ async function remove(invitation: Invitation) {
               class="input font-mono"
               required
               maxlength="64"
-              placeholder="aisyah-raka"
+              placeholder="rani-raka"
               @input="slugTouched = true"
             />
           </div>

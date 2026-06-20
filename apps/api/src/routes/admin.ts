@@ -1,9 +1,12 @@
-import { desc, eq } from 'drizzle-orm';
+import { and, asc, desc, eq } from 'drizzle-orm';
 import {
   customers,
   db,
+  giftAccounts,
   guests,
+  invitationEvents,
   invitations,
+  loveStoryEvents,
   mediaAssets,
   orders,
   rsvps,
@@ -11,8 +14,11 @@ import {
   wishes,
 } from '@invitera/db';
 import {
+  GIFT_ACCOUNT_TYPES,
   isValidJsonObject,
   isValidSlug,
+  MEDIA_SLOTS,
+  MEDIA_TYPES,
   ORDER_STATUSES,
   PACKAGE_TYPES,
   PAYMENT_STATUSES,
@@ -27,6 +33,12 @@ import { HttpError } from '../errors';
 
 const idParams = t.Object({ id: t.Numeric({ minimum: 1 }) });
 
+/** Nested child resource under an invitation (events, story, gifts, media). */
+const childParams = t.Object({
+  id: t.Numeric({ minimum: 1 }),
+  childId: t.Numeric({ minimum: 1 }),
+});
+
 const optionalText = (maxLength: number) =>
   t.Optional(t.Union([t.String({ maxLength }), t.Null()]));
 
@@ -38,6 +50,10 @@ const paymentStatusEnum = t.Union(PAYMENT_STATUSES.map((v) => t.Literal(v)));
 const orderStatusEnum = t.Union(ORDER_STATUSES.map((v) => t.Literal(v)));
 const templateKeyEnum = t.Union(TEMPLATE_KEYS.map((v) => t.Literal(v)));
 const wishStatusEnum = t.Union(WISH_STATUSES.map((v) => t.Literal(v)));
+const mediaTypeEnum = t.Union(MEDIA_TYPES.map((v) => t.Literal(v)));
+const mediaSlotEnum = t.Union(MEDIA_SLOTS.map((v) => t.Literal(v)));
+const giftTypeEnum = t.Union(GIFT_ACCOUNT_TYPES.map((v) => t.Literal(v)));
+const sortOrderField = t.Optional(t.Integer({ minimum: 0, maximum: 9999 }));
 
 const customerBody = t.Object({
   name: t.String({ minLength: 1, maxLength: 120 }),
@@ -62,13 +78,79 @@ const invitationBody = t.Object({
   slug: t.String({ minLength: 3, maxLength: 64 }),
   brideName: t.String({ minLength: 1, maxLength: 120 }),
   groomName: t.String({ minLength: 1, maxLength: 120 }),
+  brideShortName: optionalText(120),
+  groomShortName: optionalText(120),
+  brideParents: optionalText(300),
+  groomParents: optionalText(300),
+  brideTagline: optionalText(120),
+  groomTagline: optionalText(120),
   eventDate: optionalDate,
   venueName: optionalText(200),
   venueAddress: optionalText(500),
   mapsUrl: optionalText(500),
+  openingGreeting: optionalText(300),
+  verseArabic: optionalText(2000),
+  verseTranslation: optionalText(2000),
+  verseReference: optionalText(200),
+  closingMessage: optionalText(1000),
+  hashtag: optionalText(80),
+  rsvpDeadline: optionalDate,
   templateKey: t.Optional(templateKeyEnum),
   themeConfigJson: t.Optional(t.String({ maxLength: 10_000 })),
   isPublished: t.Optional(t.Boolean()),
+});
+
+/** Plain pass-through text columns shared by invitation POST/PATCH. */
+const INVITATION_TEXT_FIELDS = [
+  'brideShortName',
+  'groomShortName',
+  'brideParents',
+  'groomParents',
+  'brideTagline',
+  'groomTagline',
+  'venueName',
+  'venueAddress',
+  'mapsUrl',
+  'openingGreeting',
+  'verseArabic',
+  'verseTranslation',
+  'verseReference',
+  'closingMessage',
+  'hashtag',
+] as const;
+
+const eventBody = t.Object({
+  name: t.String({ minLength: 1, maxLength: 120 }),
+  eventDate: optionalDate,
+  timeLabel: optionalText(80),
+  venueName: optionalText(200),
+  venueAddress: optionalText(500),
+  mapsUrl: optionalText(500),
+  sortOrder: sortOrderField,
+});
+
+const storyBody = t.Object({
+  title: t.String({ minLength: 1, maxLength: 120 }),
+  whenLabel: optionalText(60),
+  description: t.String({ minLength: 1, maxLength: 2000 }),
+  sortOrder: sortOrderField,
+});
+
+const giftBody = t.Object({
+  type: t.Optional(giftTypeEnum),
+  bankName: optionalText(120),
+  accountNumber: optionalText(80),
+  accountName: optionalText(120),
+  address: optionalText(500),
+  sortOrder: sortOrderField,
+});
+
+const mediaBody = t.Object({
+  type: t.Optional(mediaTypeEnum),
+  slot: t.Optional(mediaSlotEnum),
+  url: t.String({ minLength: 1, maxLength: 1000 }),
+  altText: optionalText(200),
+  sortOrder: sortOrderField,
 });
 
 // ── helpers ───────────────────────────────────────────────────────────
@@ -139,6 +221,9 @@ async function deleteInvitationCascade(invitationId: number) {
   await db.delete(rsvps).where(eq(rsvps.invitationId, invitationId));
   await db.delete(wishes).where(eq(wishes.invitationId, invitationId));
   await db.delete(mediaAssets).where(eq(mediaAssets.invitationId, invitationId));
+  await db.delete(invitationEvents).where(eq(invitationEvents.invitationId, invitationId));
+  await db.delete(loveStoryEvents).where(eq(loveStoryEvents.invitationId, invitationId));
+  await db.delete(giftAccounts).where(eq(giftAccounts.invitationId, invitationId));
   await db.delete(guests).where(eq(guests.invitationId, invitationId));
   await db.delete(invitations).where(eq(invitations.id, invitationId));
 }
@@ -370,6 +455,8 @@ export const adminRoutes = new Elysia({ prefix: '/api/admin' })
       if (body.orderId != null) await ensureOrderExists(body.orderId);
       await ensureSlugAvailable(slug);
       if (body.themeConfigJson !== undefined) validateThemeConfig(body.themeConfigJson);
+      const textValues: Record<string, string | null> = {};
+      for (const field of INVITATION_TEXT_FIELDS) textValues[field] = body[field] ?? null;
       const [created] = await db
         .insert(invitations)
         .values({
@@ -378,11 +465,10 @@ export const adminRoutes = new Elysia({ prefix: '/api/admin' })
           slug,
           brideName: body.brideName.trim(),
           groomName: body.groomName.trim(),
+          ...textValues,
           eventDate: parseDate(body.eventDate) ?? null,
-          venueName: body.venueName ?? null,
-          venueAddress: body.venueAddress ?? null,
-          mapsUrl: body.mapsUrl ?? null,
-          templateKey: body.templateKey ?? 'modern-minimal',
+          rsvpDeadline: parseDate(body.rsvpDeadline) ?? null,
+          templateKey: body.templateKey ?? 'rani-raka',
           themeConfigJson: body.themeConfigJson ?? '{}',
           isPublished: body.isPublished ?? false,
         })
@@ -400,7 +486,10 @@ export const adminRoutes = new Elysia({ prefix: '/api/admin' })
         with: {
           customer: true,
           order: true,
-          media: { orderBy: [desc(mediaAssets.sortOrder)] },
+          media: { orderBy: [asc(mediaAssets.sortOrder)] },
+          events: { orderBy: [asc(invitationEvents.sortOrder)] },
+          story: { orderBy: [asc(loveStoryEvents.sortOrder)] },
+          gifts: { orderBy: [asc(giftAccounts.sortOrder)] },
           guests: { orderBy: [desc(guests.createdAt)] },
         },
       });
@@ -429,10 +518,11 @@ export const adminRoutes = new Elysia({ prefix: '/api/admin' })
       }
       if (body.brideName !== undefined) updates.brideName = body.brideName.trim();
       if (body.groomName !== undefined) updates.groomName = body.groomName.trim();
+      for (const field of INVITATION_TEXT_FIELDS) {
+        if (body[field] !== undefined) updates[field] = body[field];
+      }
       if (body.eventDate !== undefined) updates.eventDate = parseDate(body.eventDate);
-      if (body.venueName !== undefined) updates.venueName = body.venueName;
-      if (body.venueAddress !== undefined) updates.venueAddress = body.venueAddress;
-      if (body.mapsUrl !== undefined) updates.mapsUrl = body.mapsUrl;
+      if (body.rsvpDeadline !== undefined) updates.rsvpDeadline = parseDate(body.rsvpDeadline);
       if (body.templateKey !== undefined) updates.templateKey = body.templateKey;
       if (body.themeConfigJson !== undefined) {
         validateThemeConfig(body.themeConfigJson);
@@ -489,6 +579,298 @@ export const adminRoutes = new Elysia({ prefix: '/api/admin' })
       });
     },
     { params: idParams },
+  )
+
+  // ── schedule events (Akad / Resepsi) ──
+  .get(
+    '/invitations/:id/events',
+    async ({ params }) => {
+      await ensureInvitationExists(params.id);
+      return db.query.invitationEvents.findMany({
+        where: eq(invitationEvents.invitationId, params.id),
+        orderBy: [asc(invitationEvents.sortOrder)],
+      });
+    },
+    { params: idParams },
+  )
+  .post(
+    '/invitations/:id/events',
+    async ({ params, body, set }) => {
+      await ensureInvitationExists(params.id);
+      const [created] = await db
+        .insert(invitationEvents)
+        .values({
+          invitationId: params.id,
+          name: body.name.trim(),
+          eventDate: parseDate(body.eventDate) ?? null,
+          timeLabel: body.timeLabel ?? null,
+          venueName: body.venueName ?? null,
+          venueAddress: body.venueAddress ?? null,
+          mapsUrl: body.mapsUrl ?? null,
+          sortOrder: body.sortOrder ?? 0,
+        })
+        .returning();
+      set.status = 201;
+      return created;
+    },
+    { params: idParams, body: eventBody },
+  )
+  .patch(
+    '/invitations/:id/events/:childId',
+    async ({ params, body }) => {
+      ensureUpdate(body);
+      const updates: Partial<typeof invitationEvents.$inferInsert> = {};
+      if (body.name !== undefined) updates.name = body.name.trim();
+      if (body.eventDate !== undefined) updates.eventDate = parseDate(body.eventDate);
+      if (body.timeLabel !== undefined) updates.timeLabel = body.timeLabel;
+      if (body.venueName !== undefined) updates.venueName = body.venueName;
+      if (body.venueAddress !== undefined) updates.venueAddress = body.venueAddress;
+      if (body.mapsUrl !== undefined) updates.mapsUrl = body.mapsUrl;
+      if (body.sortOrder !== undefined) updates.sortOrder = body.sortOrder;
+      const [updated] = await db
+        .update(invitationEvents)
+        .set(updates)
+        .where(
+          and(
+            eq(invitationEvents.id, params.childId),
+            eq(invitationEvents.invitationId, params.id),
+          ),
+        )
+        .returning();
+      if (!updated) throw new HttpError(404, 'Event not found');
+      return updated;
+    },
+    { params: childParams, body: t.Partial(eventBody) },
+  )
+  .delete(
+    '/invitations/:id/events/:childId',
+    async ({ params }) => {
+      const deleted = await db
+        .delete(invitationEvents)
+        .where(
+          and(
+            eq(invitationEvents.id, params.childId),
+            eq(invitationEvents.invitationId, params.id),
+          ),
+        )
+        .returning();
+      if (deleted.length === 0) throw new HttpError(404, 'Event not found');
+      return { ok: true };
+    },
+    { params: childParams },
+  )
+
+  // ── love story milestones ──
+  .get(
+    '/invitations/:id/story',
+    async ({ params }) => {
+      await ensureInvitationExists(params.id);
+      return db.query.loveStoryEvents.findMany({
+        where: eq(loveStoryEvents.invitationId, params.id),
+        orderBy: [asc(loveStoryEvents.sortOrder)],
+      });
+    },
+    { params: idParams },
+  )
+  .post(
+    '/invitations/:id/story',
+    async ({ params, body, set }) => {
+      await ensureInvitationExists(params.id);
+      const [created] = await db
+        .insert(loveStoryEvents)
+        .values({
+          invitationId: params.id,
+          title: body.title.trim(),
+          whenLabel: body.whenLabel ?? null,
+          description: body.description.trim(),
+          sortOrder: body.sortOrder ?? 0,
+        })
+        .returning();
+      set.status = 201;
+      return created;
+    },
+    { params: idParams, body: storyBody },
+  )
+  .patch(
+    '/invitations/:id/story/:childId',
+    async ({ params, body }) => {
+      ensureUpdate(body);
+      const updates: Partial<typeof loveStoryEvents.$inferInsert> = {};
+      if (body.title !== undefined) updates.title = body.title.trim();
+      if (body.whenLabel !== undefined) updates.whenLabel = body.whenLabel;
+      if (body.description !== undefined) updates.description = body.description.trim();
+      if (body.sortOrder !== undefined) updates.sortOrder = body.sortOrder;
+      const [updated] = await db
+        .update(loveStoryEvents)
+        .set(updates)
+        .where(
+          and(
+            eq(loveStoryEvents.id, params.childId),
+            eq(loveStoryEvents.invitationId, params.id),
+          ),
+        )
+        .returning();
+      if (!updated) throw new HttpError(404, 'Story milestone not found');
+      return updated;
+    },
+    { params: childParams, body: t.Partial(storyBody) },
+  )
+  .delete(
+    '/invitations/:id/story/:childId',
+    async ({ params }) => {
+      const deleted = await db
+        .delete(loveStoryEvents)
+        .where(
+          and(
+            eq(loveStoryEvents.id, params.childId),
+            eq(loveStoryEvents.invitationId, params.id),
+          ),
+        )
+        .returning();
+      if (deleted.length === 0) throw new HttpError(404, 'Story milestone not found');
+      return { ok: true };
+    },
+    { params: childParams },
+  )
+
+  // ── wedding gift accounts ──
+  .get(
+    '/invitations/:id/gifts',
+    async ({ params }) => {
+      await ensureInvitationExists(params.id);
+      return db.query.giftAccounts.findMany({
+        where: eq(giftAccounts.invitationId, params.id),
+        orderBy: [asc(giftAccounts.sortOrder)],
+      });
+    },
+    { params: idParams },
+  )
+  .post(
+    '/invitations/:id/gifts',
+    async ({ params, body, set }) => {
+      await ensureInvitationExists(params.id);
+      const [created] = await db
+        .insert(giftAccounts)
+        .values({
+          invitationId: params.id,
+          type: body.type ?? 'bank',
+          bankName: body.bankName ?? null,
+          accountNumber: body.accountNumber ?? null,
+          accountName: body.accountName ?? null,
+          address: body.address ?? null,
+          sortOrder: body.sortOrder ?? 0,
+        })
+        .returning();
+      set.status = 201;
+      return created;
+    },
+    { params: idParams, body: giftBody },
+  )
+  .patch(
+    '/invitations/:id/gifts/:childId',
+    async ({ params, body }) => {
+      ensureUpdate(body);
+      const updates: Partial<typeof giftAccounts.$inferInsert> = {};
+      if (body.type !== undefined) updates.type = body.type;
+      if (body.bankName !== undefined) updates.bankName = body.bankName;
+      if (body.accountNumber !== undefined) updates.accountNumber = body.accountNumber;
+      if (body.accountName !== undefined) updates.accountName = body.accountName;
+      if (body.address !== undefined) updates.address = body.address;
+      if (body.sortOrder !== undefined) updates.sortOrder = body.sortOrder;
+      const [updated] = await db
+        .update(giftAccounts)
+        .set(updates)
+        .where(
+          and(eq(giftAccounts.id, params.childId), eq(giftAccounts.invitationId, params.id)),
+        )
+        .returning();
+      if (!updated) throw new HttpError(404, 'Gift account not found');
+      return updated;
+    },
+    { params: childParams, body: t.Partial(giftBody) },
+  )
+  .delete(
+    '/invitations/:id/gifts/:childId',
+    async ({ params }) => {
+      const deleted = await db
+        .delete(giftAccounts)
+        .where(
+          and(eq(giftAccounts.id, params.childId), eq(giftAccounts.invitationId, params.id)),
+        )
+        .returning();
+      if (deleted.length === 0) throw new HttpError(404, 'Gift account not found');
+      return { ok: true };
+    },
+    { params: childParams },
+  )
+
+  // ── media assets ──
+  .get(
+    '/invitations/:id/media',
+    async ({ params }) => {
+      await ensureInvitationExists(params.id);
+      return db.query.mediaAssets.findMany({
+        where: eq(mediaAssets.invitationId, params.id),
+        orderBy: [asc(mediaAssets.sortOrder)],
+      });
+    },
+    { params: idParams },
+  )
+  .post(
+    '/invitations/:id/media',
+    async ({ params, body, set }) => {
+      await ensureInvitationExists(params.id);
+      const [created] = await db
+        .insert(mediaAssets)
+        .values({
+          invitationId: params.id,
+          type: body.type ?? 'image',
+          slot: body.slot ?? 'gallery',
+          url: body.url.trim(),
+          altText: body.altText ?? null,
+          sortOrder: body.sortOrder ?? 0,
+        })
+        .returning();
+      set.status = 201;
+      return created;
+    },
+    { params: idParams, body: mediaBody },
+  )
+  .patch(
+    '/invitations/:id/media/:childId',
+    async ({ params, body }) => {
+      ensureUpdate(body);
+      const updates: Partial<typeof mediaAssets.$inferInsert> = {};
+      if (body.type !== undefined) updates.type = body.type;
+      if (body.slot !== undefined) updates.slot = body.slot;
+      if (body.url !== undefined) updates.url = body.url.trim();
+      if (body.altText !== undefined) updates.altText = body.altText;
+      if (body.sortOrder !== undefined) updates.sortOrder = body.sortOrder;
+      const [updated] = await db
+        .update(mediaAssets)
+        .set(updates)
+        .where(
+          and(eq(mediaAssets.id, params.childId), eq(mediaAssets.invitationId, params.id)),
+        )
+        .returning();
+      if (!updated) throw new HttpError(404, 'Media asset not found');
+      return updated;
+    },
+    { params: childParams, body: t.Partial(mediaBody) },
+  )
+  .delete(
+    '/invitations/:id/media/:childId',
+    async ({ params }) => {
+      const deleted = await db
+        .delete(mediaAssets)
+        .where(
+          and(eq(mediaAssets.id, params.childId), eq(mediaAssets.invitationId, params.id)),
+        )
+        .returning();
+      if (deleted.length === 0) throw new HttpError(404, 'Media asset not found');
+      return { ok: true };
+    },
+    { params: childParams },
   )
 
   // ── wishes moderation ──

@@ -2,7 +2,13 @@
 # Dependencies are baked into the image; source dirs are bind-mounted for
 # hot reload. Re-run `docker compose -f docker-compose.dev.yml up --build`
 # after changing any package.json.
-FROM oven/bun:1
+# Pinned to match the bun version that owns bun.lock (the floating `oven/bun:1`
+# tag drifts to newer bun releases, which rewrite the lockfile and break
+# `bun install --frozen-lockfile`). Bump this in lockstep with local bun.
+# NOTE: must be >= 1.3 — bun 1.2.4 miscompiles Vue templates (the @vue/compiler-core
+# transform drops v-if/v-else linkage and codegen nodes), so Vite dev under bun 1.2.4
+# fails with "Codegen node is missing" / "v-else has no adjacent v-if". Fixed in 1.3.x.
+FROM oven/bun:1.3.14
 WORKDIR /app
 
 COPY package.json bun.lock ./

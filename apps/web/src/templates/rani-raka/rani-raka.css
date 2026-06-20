@@ -1,0 +1,1319 @@
+/* ====================================================================
+   Rani & Raka — Wedding Invitation
+   Soft peacock-romantic theme. Ported from the Claude Design project and
+   scoped under `.rr-root` so it never leaks into the rest of the app.
+   Palette CSS variables are set inline on `.rr-root` from ThemeConfig.
+   ==================================================================== */
+
+.rr-root {
+  --cream: #f7f1e7;
+  --cream-deep: #efe5d3;
+  --blush: #f3e2db;
+  --night: #0d2b4e;
+  --night-2: #123a63;
+  --peacock: #1f6fa8;
+  --teal: #2fa39a;
+  --teal-soft: #7cc4bd;
+  --gold: #cda434;
+  --gold-light: #e8cd7e;
+  --ink: #26424f;
+  --ink-soft: #5c7480;
+
+  --font-serif: 'Cormorant Garamond', Georgia, serif;
+  --font-script: 'Pinyon Script', cursive;
+  --font-label: 'Marcellus', serif;
+
+  --maxw: 480px;
+  --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+
+  font-family: var(--font-serif);
+  background: var(--cream);
+  color: var(--ink);
+  font-size: 18px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  position: relative;
+  width: 100%;
+  overflow-x: clip;
+}
+
+.rr-root *,
+.rr-root *::before,
+.rr-root *::after {
+  box-sizing: border-box;
+}
+
+/* centered mobile column on larger screens */
+.rr-page {
+  width: 100%;
+  max-width: var(--maxw);
+  margin: 0 auto;
+  position: relative;
+  background: var(--cream);
+  box-shadow: 0 0 80px rgba(13, 43, 78, 0.08);
+}
+
+/* ---------- shared type ---------- */
+.rr-root .eyebrow {
+  font-family: var(--font-label);
+  text-transform: uppercase;
+  letter-spacing: 0.42em;
+  font-size: 0.72rem;
+  color: var(--gold);
+  display: inline-block;
+}
+.rr-root .script {
+  font-family: var(--font-script);
+  font-weight: 400;
+  line-height: 0.95;
+  color: var(--night);
+}
+.rr-root .section-title {
+  font-family: var(--font-label);
+  font-size: 1.9rem;
+  letter-spacing: 0.02em;
+  color: var(--night);
+  font-weight: 400;
+}
+.rr-root .lead {
+  color: var(--ink-soft);
+  font-size: 1.15rem;
+}
+
+/* divider with motif */
+.rr-root .divider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  margin: 18px 0;
+}
+.rr-root .divider .line {
+  height: 1px;
+  width: 54px;
+  background: linear-gradient(90deg, transparent, var(--gold));
+}
+.rr-root .divider .line.r {
+  background: linear-gradient(90deg, var(--gold), transparent);
+}
+.rr-root .divider .dot {
+  color: var(--gold);
+  font-size: 1.1rem;
+}
+
+/* ====================================================================
+   HERO
+   ==================================================================== */
+.rr-root .hero {
+  position: relative;
+  min-height: 100svh;
+  background: radial-gradient(120% 80% at 50% 0%, #15406e 0%, var(--night) 55%, #081d36 100%);
+  color: var(--cream);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* starfield / twinkle layer */
+.rr-root .twinkles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+}
+.rr-root .twinkle {
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--gold-light);
+  box-shadow: 0 0 6px 1px rgba(232, 205, 126, 0.8);
+  opacity: 0;
+  animation: rr-tw 3.5s ease-in-out infinite;
+}
+@keyframes rr-tw {
+  0%,
+  100% {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+  50% {
+    opacity: 0.9;
+    transform: scale(1);
+  }
+}
+
+/* ---------- GATE ---------- */
+.rr-root .gate-wrap {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  perspective: 1600px;
+  pointer-events: none;
+}
+.rr-root .gate-door {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 50%;
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+  filter: drop-shadow(0 12px 40px rgba(0, 0, 0, 0.45));
+}
+.rr-root .gate-door.left {
+  left: 0;
+  transform-origin: left center;
+}
+.rr-root .gate-door.right {
+  right: 0;
+  transform-origin: right center;
+}
+.rr-root .gate-door svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.rr-root .gate-open .gate-door.left {
+  animation: rr-doorOpenL 2.4s var(--ease) 0.5s forwards;
+}
+.rr-root .gate-open .gate-door.right {
+  animation: rr-doorOpenR 2.4s var(--ease) 0.5s forwards;
+}
+@keyframes rr-doorOpenL {
+  from {
+    transform: rotateY(0);
+    opacity: 1;
+  }
+  to {
+    transform: rotateY(-108deg);
+    opacity: 0.22;
+  }
+}
+@keyframes rr-doorOpenR {
+  from {
+    transform: rotateY(0);
+    opacity: 1;
+  }
+  to {
+    transform: rotateY(108deg);
+    opacity: 0.22;
+  }
+}
+
+/* hero inner content (revealed) */
+.rr-root .hero-inner {
+  position: relative;
+  z-index: 3;
+  text-align: center;
+  padding: 40px 28px;
+  width: 100%;
+  opacity: 0;
+  transform: translateY(18px);
+}
+.rr-root .gate-open .hero-inner {
+  animation: rr-revealUp 1.4s var(--ease) 1.9s forwards;
+}
+@keyframes rr-revealUp {
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.rr-root .hero-eyebrow {
+  color: var(--gold-light);
+  letter-spacing: 0.5em;
+}
+.rr-root .hero-names {
+  font-size: clamp(4.2rem, 22vw, 7rem);
+  color: var(--cream);
+  margin: 6px 0 2px;
+  text-shadow: 0 4px 30px rgba(0, 0, 0, 0.4);
+}
+.rr-root .hero-names .amp {
+  display: block;
+  font-size: 0.42em;
+  color: var(--gold-light);
+  margin: -6px 0;
+}
+.rr-root .hero-date {
+  font-family: var(--font-label);
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  font-size: 0.92rem;
+  color: var(--teal-soft);
+  margin-top: 10px;
+}
+.rr-root .hero-venue {
+  font-family: var(--font-label);
+  letter-spacing: 0.18em;
+  font-size: 0.78rem;
+  color: rgba(247, 241, 231, 0.7);
+  margin-top: 6px;
+}
+
+/* peacock above */
+.rr-root .peacock-stage {
+  position: relative;
+  margin: 0 auto 6px;
+  width: min(78%, 320px);
+}
+.rr-root .peacock-stage svg {
+  width: 100%;
+  height: auto;
+  display: block;
+  overflow: visible;
+}
+
+/* scroll cue */
+.rr-root .scroll-cue {
+  position: absolute;
+  left: 50%;
+  bottom: 22px;
+  transform: translateX(-50%);
+  z-index: 7;
+  color: var(--gold-light);
+  text-align: center;
+  font-family: var(--font-label);
+  letter-spacing: 0.25em;
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  opacity: 0;
+}
+.rr-root .gate-open .scroll-cue {
+  animation:
+    rr-cueIn 0.8s ease 2.9s forwards,
+    rr-bob 2.4s ease-in-out infinite 3.7s;
+}
+@keyframes rr-cueIn {
+  to {
+    opacity: 0.85;
+  }
+}
+
+/* fallback reveal — forces the end-state once entrance is done */
+.rr-root .force-open .gate-door.left {
+  transform: rotateY(-108deg) !important;
+  opacity: 0.22 !important;
+}
+.rr-root .force-open .gate-door.right {
+  transform: rotateY(108deg) !important;
+  opacity: 0.22 !important;
+}
+.rr-root .force-open .hero-inner {
+  opacity: 1 !important;
+  transform: none !important;
+}
+.rr-root .force-open .scroll-cue {
+  opacity: 0.85 !important;
+}
+@keyframes rr-bob {
+  0%,
+  100% {
+    transform: translateX(-50%) translateY(0);
+  }
+  50% {
+    transform: translateX(-50%) translateY(7px);
+  }
+}
+.rr-root .scroll-cue .arrow {
+  display: block;
+  margin: 6px auto 0;
+  width: 1px;
+  height: 26px;
+  background: linear-gradient(var(--gold-light), transparent);
+}
+
+/* feather shimmer reused */
+.rr-root .shimmer {
+  animation: rr-shimmer 4s ease-in-out infinite;
+  transform-origin: center bottom;
+}
+@keyframes rr-shimmer {
+  0%,
+  100% {
+    transform: rotate(0deg) scaleY(1);
+    filter: brightness(1);
+  }
+  50% {
+    transform: rotate(0.6deg) scaleY(1.015);
+    filter: brightness(1.12);
+  }
+}
+.rr-root .sway {
+  animation: rr-sway 6s ease-in-out infinite;
+  transform-origin: center bottom;
+}
+@keyframes rr-sway {
+  0%,
+  100% {
+    transform: rotate(-1.4deg);
+  }
+  50% {
+    transform: rotate(1.4deg);
+  }
+}
+
+/* ====================================================================
+   GENERIC SECTION
+   ==================================================================== */
+.rr-root section.block {
+  position: relative;
+  padding: 76px 28px;
+}
+.rr-root .block.cream {
+  background: var(--cream);
+}
+.rr-root .block.deep {
+  background: var(--cream-deep);
+}
+.rr-root .block.center {
+  text-align: center;
+}
+
+.rr-root .reveal {
+  opacity: 0;
+  transform: translateY(26px);
+  transition:
+    opacity 1s var(--ease),
+    transform 1s var(--ease);
+}
+.rr-root .reveal.in {
+  opacity: 1;
+  transform: none;
+}
+.rr-root .reveal.d1 {
+  transition-delay: 0.12s;
+}
+.rr-root .reveal.d2 {
+  transition-delay: 0.24s;
+}
+.rr-root .reveal.d3 {
+  transition-delay: 0.36s;
+}
+
+/* Motion disabled OR reduced-motion: skip animations but REVEAL end state */
+@media (prefers-reduced-motion: reduce) {
+  .rr-root .reveal {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  .rr-root .gate-door.left {
+    transform: rotateY(-108deg);
+    opacity: 0.22;
+    animation: none !important;
+  }
+  .rr-root .gate-door.right {
+    transform: rotateY(108deg);
+    opacity: 0.22;
+    animation: none !important;
+  }
+  .rr-root .hero-inner {
+    opacity: 1 !important;
+    transform: none !important;
+    animation: none !important;
+  }
+  .rr-root .scroll-cue {
+    opacity: 0.85 !important;
+    animation: none !important;
+  }
+  .rr-root .twinkle,
+  .rr-root .shimmer,
+  .rr-root .sway {
+    animation: none !important;
+  }
+}
+
+.rr-root.no-motion .reveal {
+  opacity: 1 !important;
+  transform: none !important;
+  transition: none !important;
+}
+.rr-root.no-motion .gate-door.left {
+  transform: rotateY(-108deg);
+  opacity: 0.22;
+  animation: none !important;
+}
+.rr-root.no-motion .gate-door.right {
+  transform: rotateY(108deg);
+  opacity: 0.22;
+  animation: none !important;
+}
+.rr-root.no-motion .hero-inner {
+  opacity: 1 !important;
+  transform: none !important;
+  animation: none !important;
+}
+.rr-root.no-motion .scroll-cue {
+  opacity: 0.85 !important;
+  animation: none !important;
+}
+.rr-root.no-motion .twinkle,
+.rr-root.no-motion .shimmer,
+.rr-root.no-motion .sway,
+.rr-root.no-motion .venue-map .dot {
+  animation: none !important;
+}
+
+/* ====================================================================
+   KISAH CINTA (LOVE STORY)
+   ==================================================================== */
+.rr-root .story-line {
+  margin-top: 30px;
+  text-align: left;
+  display: grid;
+  gap: 22px;
+}
+.rr-root .story-step {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 16px;
+  background: #fff;
+  border: 1px solid rgba(205, 164, 52, 0.32);
+  border-radius: 16px;
+  padding: 20px 20px 22px;
+  box-shadow: 0 12px 36px rgba(13, 43, 78, 0.07);
+}
+.rr-root .ss-icon {
+  width: 42px;
+  height: 42px;
+  flex: none;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--gold);
+  background: var(--cream);
+  border: 1px solid rgba(205, 164, 52, 0.5);
+}
+.rr-root .ss-when {
+  font-family: var(--font-label);
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  font-size: 0.64rem;
+  color: var(--teal);
+}
+.rr-root .ss-title {
+  font-family: var(--font-label);
+  font-size: 1.32rem;
+  color: var(--night);
+  font-weight: 400;
+  margin: 3px 0 7px;
+}
+.rr-root .ss-desc {
+  color: var(--ink-soft);
+  font-size: 1.02rem;
+  line-height: 1.55;
+  text-wrap: pretty;
+}
+
+/* ====================================================================
+   WEDDING GIFT
+   ==================================================================== */
+.rr-root .gift-intro {
+  max-width: 380px;
+  margin: 8px auto 0;
+  text-wrap: pretty;
+}
+.rr-root .gift-wrap {
+  margin-top: 28px;
+  display: grid;
+  gap: 16px;
+  text-align: left;
+}
+.rr-root .gift-card {
+  background: #fff;
+  border: 1px solid rgba(205, 164, 52, 0.4);
+  border-radius: 16px;
+  padding: 22px 22px 20px;
+  box-shadow: 0 14px 40px rgba(13, 43, 78, 0.08);
+}
+.rr-root .gift-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.rr-root .gift-ic {
+  color: var(--teal);
+  display: inline-flex;
+}
+.rr-root .gift-bank {
+  font-family: var(--font-label);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-size: 0.76rem;
+  color: var(--teal);
+}
+.rr-root .gift-no {
+  font-family: var(--font-label);
+  font-size: 1.7rem;
+  letter-spacing: 0.06em;
+  color: var(--night);
+  margin: 12px 0 4px;
+}
+.rr-root .gift-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 14px;
+  margin-top: 8px;
+}
+.rr-root .gift-name {
+  color: var(--ink-soft);
+  font-size: 1.04rem;
+}
+.rr-root .gift-addr-name {
+  font-family: var(--font-script);
+  font-size: 2rem;
+  color: var(--night);
+  line-height: 1;
+  margin: 12px 0 8px;
+}
+.rr-root .gift-addr {
+  color: var(--ink-soft);
+  font-size: 1.02rem;
+  line-height: 1.5;
+  white-space: pre-line;
+  text-wrap: pretty;
+}
+.rr-root .copy-btn {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  font-family: var(--font-label);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-size: 0.6rem;
+  color: var(--night);
+  background: transparent;
+  border: 1px solid var(--gold);
+  border-radius: 40px;
+  padding: 8px 14px;
+  transition:
+    background 0.25s var(--ease),
+    color 0.25s var(--ease);
+}
+.rr-root .copy-btn:hover {
+  background: var(--gold);
+  color: #fff;
+}
+.rr-root .copy-btn svg {
+  stroke: currentColor;
+}
+
+/* corner floral framing on sections */
+.rr-root .corner-floral {
+  position: absolute;
+  width: 96px;
+  height: 96px;
+  opacity: 0.5;
+  pointer-events: none;
+}
+.rr-root .corner-floral.tl {
+  top: 14px;
+  left: 14px;
+}
+.rr-root .corner-floral.br {
+  bottom: 14px;
+  right: 14px;
+  transform: rotate(180deg);
+}
+.rr-root .corner-floral svg {
+  width: 100%;
+  height: 100%;
+}
+
+/* ---------- countdown ---------- */
+.rr-root .countdown {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 26px;
+}
+.rr-root .cd-cell {
+  background: #fff;
+  border: 1px solid rgba(205, 164, 52, 0.35);
+  border-radius: 14px;
+  padding: 16px 8px;
+  min-width: 70px;
+  box-shadow: 0 10px 30px rgba(13, 43, 78, 0.06);
+}
+.rr-root .cd-num {
+  font-family: var(--font-label);
+  font-size: 2rem;
+  color: var(--night);
+  line-height: 1;
+}
+.rr-root .cd-lab {
+  font-family: var(--font-label);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-size: 0.58rem;
+  color: var(--gold);
+  margin-top: 8px;
+}
+
+/* ---------- mempelai ---------- */
+.rr-root .mempelai {
+  margin-top: 18px;
+}
+.rr-root .mp-photo {
+  width: 168px;
+  height: 168px;
+  margin: 0 auto 16px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 2px solid var(--gold);
+  box-shadow:
+    0 14px 40px rgba(13, 43, 78, 0.18),
+    0 0 0 8px var(--cream);
+}
+.rr-root .mp-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.rr-root .mp-photo.empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--cream-deep);
+  color: var(--ink-soft);
+  font-family: var(--font-label);
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  text-align: center;
+  padding: 12px;
+}
+.rr-root .mp-name {
+  font-size: 3rem;
+  color: var(--night);
+  line-height: 1;
+}
+.rr-root .mp-role {
+  font-family: var(--font-label);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-size: 0.68rem;
+  color: var(--teal);
+  margin-top: 8px;
+}
+.rr-root .mp-parents {
+  color: var(--ink-soft);
+  font-size: 1.05rem;
+  margin-top: 4px;
+  line-height: 1.5;
+  white-space: pre-line;
+}
+.rr-root .mp-amp {
+  font-size: 3rem;
+  color: var(--gold);
+  margin: 22px 0;
+}
+
+/* ---------- schedule cards ---------- */
+.rr-root .acara-grid {
+  margin-top: 30px;
+  display: grid;
+  gap: 16px;
+  text-align: center;
+}
+.rr-root .acara-card {
+  background: #fff;
+  border: 1px solid rgba(205, 164, 52, 0.4);
+  border-radius: 18px;
+  padding: 26px 22px 24px;
+  box-shadow: 0 14px 40px rgba(13, 43, 78, 0.08);
+}
+.rr-root .acara-card .ac-name {
+  font-family: var(--font-label);
+  font-size: 1.5rem;
+  color: var(--night);
+  letter-spacing: 0.02em;
+}
+.rr-root .acara-card .ac-date {
+  font-family: var(--font-label);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-size: 0.72rem;
+  color: var(--teal);
+  margin-top: 10px;
+}
+.rr-root .acara-card .ac-time {
+  font-family: var(--font-label);
+  letter-spacing: 0.08em;
+  font-size: 1.04rem;
+  color: var(--ink);
+  margin-top: 4px;
+}
+.rr-root .ac-divider {
+  display: flex;
+  justify-content: center;
+  margin: 16px 0;
+}
+.rr-root .ac-divider .line {
+  width: 46px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+}
+.rr-root .acara-card .ac-venue {
+  font-family: var(--font-label);
+  font-size: 1.12rem;
+  color: var(--night);
+}
+.rr-root .acara-card .ac-addr {
+  color: var(--ink-soft);
+  font-size: 1rem;
+  margin-top: 5px;
+  text-wrap: pretty;
+  max-width: 300px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.rr-root .acara-card .ac-map {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 18px;
+}
+.rr-root .acara-card .ac-map svg {
+  stroke: currentColor;
+}
+
+/* ---------- venue ---------- */
+.rr-root .venue-card {
+  margin-top: 26px;
+  border-radius: 18px;
+  overflow: hidden;
+  border: 1px solid rgba(205, 164, 52, 0.4);
+  box-shadow: 0 16px 44px rgba(13, 43, 78, 0.1);
+}
+.rr-root .venue-map {
+  height: 220px;
+  position: relative;
+  background: linear-gradient(135deg, #e7eee9, #dfe9ef);
+}
+.rr-root .venue-map .pin {
+  position: absolute;
+  left: 50%;
+  top: 46%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+}
+.rr-root .venue-map .pin .dot {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--teal);
+  margin: 0 auto;
+  box-shadow: 0 0 0 6px rgba(47, 163, 154, 0.25);
+  animation: rr-pulse 2s ease-out infinite;
+}
+@keyframes rr-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(47, 163, 154, 0.4);
+  }
+  100% {
+    box-shadow: 0 0 0 16px rgba(47, 163, 154, 0);
+  }
+}
+.rr-root .venue-map .roads {
+  position: absolute;
+  inset: 0;
+  opacity: 0.5;
+}
+.rr-root .venue-info {
+  background: #fff;
+  padding: 20px 22px;
+  text-align: center;
+}
+.rr-root .venue-info .vname {
+  font-family: var(--font-label);
+  font-size: 1.3rem;
+  color: var(--night);
+}
+.rr-root .venue-info .vaddr {
+  color: var(--ink-soft);
+  font-size: 1rem;
+  margin-top: 4px;
+}
+
+/* ---------- buttons ---------- */
+.rr-root .btn {
+  display: inline-block;
+  margin-top: 16px;
+  font-family: var(--font-label);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  font-size: 0.72rem;
+  color: var(--night);
+  border: 1px solid var(--gold);
+  border-radius: 40px;
+  padding: 11px 26px;
+  text-decoration: none;
+  background: transparent;
+  transition:
+    background 0.3s var(--ease),
+    color 0.3s var(--ease),
+    transform 0.2s;
+  cursor: pointer;
+}
+.rr-root .btn:hover {
+  background: var(--gold);
+  color: #fff;
+}
+.rr-root .btn:active {
+  transform: scale(0.97);
+}
+.rr-root .btn.solid {
+  background: var(--night);
+  color: var(--cream);
+  border-color: var(--night);
+}
+.rr-root .btn.solid:hover {
+  background: var(--night-2);
+}
+
+/* ---------- gallery ---------- */
+.rr-root .gallery-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 26px;
+}
+.rr-root .gallery-grid .g-cell {
+  width: 100%;
+  display: block;
+  border: 1px solid rgba(205, 164, 52, 0.35);
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--cream-deep);
+}
+.rr-root .gallery-grid .g-cell img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.rr-root .g-tall {
+  grid-row: span 2;
+}
+
+/* ---------- RSVP ---------- */
+.rr-root .rsvp {
+  background: radial-gradient(120% 90% at 50% 0%, #15406e 0%, var(--night) 60%, #081d36 100%);
+  color: var(--cream);
+  position: relative;
+  overflow: hidden;
+}
+.rr-root .rsvp .eyebrow {
+  color: var(--gold-light);
+}
+.rr-root .rsvp .section-title {
+  color: var(--cream);
+}
+.rr-root .rsvp .lead {
+  color: rgba(247, 241, 231, 0.75);
+}
+.rr-root .form {
+  margin-top: 28px;
+  display: grid;
+  gap: 16px;
+  text-align: left;
+}
+.rr-root .field label {
+  display: block;
+  font-family: var(--font-label);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-size: 0.62rem;
+  color: var(--gold-light);
+  margin-bottom: 7px;
+}
+.rr-root .field input,
+.rr-root .field select,
+.rr-root .field textarea {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(205, 164, 52, 0.4);
+  border-radius: 10px;
+  padding: 12px 14px;
+  color: var(--cream);
+  font-family: var(--font-serif);
+  font-size: 1.05rem;
+  outline: none;
+  transition:
+    border-color 0.25s,
+    background 0.25s;
+}
+.rr-root .field input::placeholder,
+.rr-root .field textarea::placeholder {
+  color: rgba(247, 241, 231, 0.4);
+}
+.rr-root .field input:focus,
+.rr-root .field select:focus,
+.rr-root .field textarea:focus {
+  border-color: var(--gold-light);
+  background: rgba(255, 255, 255, 0.1);
+}
+.rr-root .field select option {
+  color: #123;
+}
+.rr-root .seg {
+  display: flex;
+  gap: 10px;
+}
+.rr-root .seg button {
+  flex: 1;
+  padding: 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(205, 164, 52, 0.4);
+  color: var(--cream);
+  font-family: var(--font-label);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-size: 0.72rem;
+  transition: all 0.25s;
+}
+.rr-root .seg button.active {
+  background: var(--gold);
+  color: var(--night);
+  border-color: var(--gold);
+}
+.rr-root .rsvp .btn {
+  color: var(--cream);
+  border-color: var(--gold-light);
+  width: 100%;
+  padding: 15px;
+  font-size: 0.78rem;
+}
+.rr-root .rsvp .btn:hover {
+  background: var(--gold);
+  color: var(--night);
+}
+.rr-root .rsvp .btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.rr-root .thanks {
+  text-align: center;
+  padding: 30px 0;
+}
+.rr-root .thanks .script {
+  color: var(--cream);
+  font-size: 3rem;
+}
+
+/* wishes wall */
+.rr-root .wishes-wall {
+  margin-top: 30px;
+  display: grid;
+  gap: 12px;
+  text-align: left;
+}
+.rr-root .wish-card {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(205, 164, 52, 0.3);
+  border-radius: 12px;
+  padding: 14px 16px;
+}
+.rr-root .wish-name {
+  font-family: var(--font-label);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-size: 0.62rem;
+  color: var(--gold-light);
+}
+.rr-root .wish-msg {
+  color: rgba(247, 241, 231, 0.85);
+  font-size: 1.02rem;
+  margin-top: 4px;
+  text-wrap: pretty;
+}
+
+/* ---------- footer ---------- */
+.rr-root .foot {
+  background: var(--night);
+  color: rgba(247, 241, 231, 0.7);
+  text-align: center;
+  padding: 50px 28px 60px;
+  position: relative;
+  overflow: hidden;
+}
+.rr-root .foot .lead {
+  color: rgba(247, 241, 231, 0.78);
+  max-width: 360px;
+  margin: 0 auto;
+}
+.rr-root .foot .script {
+  color: var(--gold-light);
+  font-size: 3.4rem;
+}
+.rr-root .foot .ft-sub {
+  font-family: var(--font-label);
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  font-size: 0.64rem;
+  margin-top: 10px;
+  color: var(--teal-soft);
+}
+.rr-root .foot .hashtag {
+  margin-top: 22px;
+  font-family: var(--font-label);
+  letter-spacing: 0.12em;
+  color: var(--gold-light);
+  font-size: 0.8rem;
+}
+
+/* desktop side panels framing the mobile column */
+@media (min-width: 620px) {
+  .rr-root {
+    background: radial-gradient(140% 100% at 50% 0%, #102f53 0%, #0a2038 60%, #07182b 100%) fixed;
+  }
+  .rr-page {
+    margin: 24px auto;
+    border-radius: 22px;
+    overflow: hidden;
+    box-shadow: 0 40px 120px rgba(0, 0, 0, 0.5);
+  }
+  .rr-root .hero {
+    min-height: 92svh;
+  }
+}
+
+/* ====================================================================
+   ARABIC + QURAN VERSE
+   ==================================================================== */
+.rr-root .arabic {
+  font-family: 'Amiri', serif;
+  direction: rtl;
+  line-height: 2;
+}
+.rr-root .bismillah {
+  color: var(--gold-light);
+  font-size: 1.7rem;
+  margin-bottom: 8px;
+}
+.rr-root .verse-card {
+  margin-top: 6px;
+  padding: 6px 4px;
+}
+.rr-root .verse-ar {
+  font-family: 'Amiri', serif;
+  direction: rtl;
+  color: var(--night);
+  font-size: 1.65rem;
+  line-height: 2.2;
+}
+.rr-root .verse-tr {
+  font-style: italic;
+  color: var(--ink-soft);
+  font-size: 1.08rem;
+  margin-top: 18px;
+  text-wrap: pretty;
+}
+.rr-root .verse-ref {
+  font-family: var(--font-label);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  font-size: 0.72rem;
+  color: var(--gold);
+  margin-top: 14px;
+}
+.rr-root .block.deep .verse-ar {
+  color: var(--night);
+}
+.rr-root .block.deep .bismillah {
+  color: var(--gold);
+}
+
+/* ====================================================================
+   PARALLAX FLOCK (peacock + birds)
+   ==================================================================== */
+.rr-root .flock {
+  position: fixed;
+  inset: 0;
+  z-index: 34;
+  pointer-events: none;
+  overflow: hidden;
+  max-width: var(--maxw);
+  left: 50%;
+  margin: 0 auto;
+  transform: translateX(-50%);
+}
+.rr-root .flock-item {
+  position: absolute;
+  will-change: transform;
+}
+.rr-root .flock-item svg {
+  width: 100%;
+  height: auto;
+  display: block;
+  overflow: visible;
+}
+.rr-root .flock-item .mini-bird {
+  animation: rr-birdFlap 1.1s ease-in-out infinite;
+  transform-origin: center;
+}
+@keyframes rr-birdFlap {
+  0%,
+  100% {
+    transform: scaleY(1);
+  }
+  50% {
+    transform: scaleY(0.5);
+  }
+}
+.rr-root.no-motion .flock {
+  display: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .rr-root .flock {
+    display: none;
+  }
+}
+
+/* ====================================================================
+   COVER (amplop)
+   ==================================================================== */
+.rr-cover {
+  position: fixed;
+  inset: 0;
+  z-index: 150;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(120% 80% at 50% 0%, #15406e 0%, var(--night) 55%, #081d36 100%);
+  color: var(--cream);
+  overflow: hidden;
+  transition:
+    transform 1.1s var(--ease),
+    opacity 1.1s ease;
+}
+.rr-cover.gone {
+  transform: translateY(-100%);
+  opacity: 0;
+  pointer-events: none;
+}
+.rr-cover .cover-frame {
+  position: absolute;
+  inset: 18px;
+  border: 1px solid rgba(205, 164, 52, 0.5);
+  border-radius: 18px;
+  box-shadow: inset 0 0 0 6px rgba(205, 164, 52, 0.12);
+  pointer-events: none;
+}
+.rr-cover .cover-frame::before,
+.rr-cover .cover-frame::after {
+  content: '';
+  position: absolute;
+  width: 54px;
+  height: 54px;
+  border: 2px solid var(--gold);
+  border-radius: 4px;
+}
+.rr-cover .cover-frame::before {
+  top: -2px;
+  left: -2px;
+  border-right: none;
+  border-bottom: none;
+  border-top-left-radius: 16px;
+}
+.rr-cover .cover-frame::after {
+  bottom: -2px;
+  right: -2px;
+  border-left: none;
+  border-top: none;
+  border-bottom-right-radius: 16px;
+}
+.rr-cover .cover-inner {
+  position: relative;
+  z-index: 3;
+  text-align: center;
+  padding: 40px 30px;
+  width: 100%;
+  max-width: 460px;
+}
+.rr-cover .cover-peacock {
+  width: min(58%, 220px);
+  margin: 0 auto 10px;
+}
+.rr-cover .cover-peacock svg {
+  width: 100%;
+  height: auto;
+  display: block;
+  overflow: visible;
+}
+.rr-cover .cover-names {
+  font-size: clamp(3.4rem, 16vw, 5.4rem);
+  color: var(--cream);
+  margin: 4px 0;
+  text-shadow: 0 4px 30px rgba(0, 0, 0, 0.4);
+}
+.rr-cover .cover-names .amp {
+  font-size: 0.44em;
+  color: var(--gold-light);
+}
+.rr-cover .cover-to {
+  font-family: var(--font-label);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  font-size: 0.74rem;
+  color: var(--teal-soft);
+  margin-top: 4px;
+}
+.rr-cover .cover-to-sub {
+  font-family: var(--font-label);
+  font-size: 0.82rem;
+  color: rgba(247, 241, 231, 0.6);
+  margin-top: 4px;
+}
+.rr-cover .cover-recipient {
+  font-size: 2.6rem;
+  color: var(--gold-light);
+  margin: 4px 0 22px;
+  line-height: 1;
+}
+.rr-cover .open-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 0.8rem;
+  padding: 14px 30px;
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.4);
+}
+.rr-cover .open-btn svg {
+  stroke: currentColor;
+}
+.rr-cover .cover-note {
+  font-family: var(--font-label);
+  font-size: 0.66rem;
+  letter-spacing: 0.04em;
+  color: rgba(247, 241, 231, 0.5);
+  margin-top: 22px;
+  text-wrap: pretty;
+}
+.rr-cover .twinkles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+}
+.rr-cover .twinkle {
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--gold-light);
+  box-shadow: 0 0 6px 1px rgba(232, 205, 126, 0.8);
+  opacity: 0;
+  animation: rr-tw 3.5s ease-in-out infinite;
+}

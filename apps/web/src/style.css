@@ -1,5 +1,15 @@
 @import 'tailwindcss';
 
+@theme {
+  --font-serif: 'Cormorant Garamond', Georgia, serif;
+  --font-sans: 'Montserrat', system-ui, sans-serif;
+}
+
+:root {
+  /* Signature easing shared by cover gate + reveals (from the prototype). */
+  --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
 @layer components {
   .invite-input {
     @apply w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm text-stone-800 outline-none transition focus:border-stone-500 focus:ring-2 focus:ring-stone-200;
@@ -72,4 +82,106 @@
 }
 .animate-float-slow {
   animation: float-slow 5s ease-in-out infinite;
+}
+
+/* Scroll-reveal animation system */
+[data-animate] {
+  opacity: 0;
+  transform: translateY(36px);
+  transition: opacity 0.75s ease, transform 0.75s ease;
+}
+[data-animate].is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+[data-animate][data-delay="1"] { transition-delay: 0.12s; }
+[data-animate][data-delay="2"] { transition-delay: 0.24s; }
+[data-animate][data-delay="3"] { transition-delay: 0.36s; }
+[data-animate][data-delay="4"] { transition-delay: 0.48s; }
+[data-animate][data-slide="left"]  { transform: translateX(-36px); }
+[data-animate][data-slide="right"] { transform: translateX(36px); }
+[data-animate][data-slide="zoom"]  { transform: scale(0.9); opacity: 0; }
+[data-animate][data-slide="left"].is-visible,
+[data-animate][data-slide="right"].is-visible,
+[data-animate][data-slide="zoom"].is-visible { transform: none; opacity: 1; }
+
+/* ── Cover gate (3D opening doors) ─────────────────────────────── */
+.gate-scene {
+  perspective: 1600px;
+}
+.gate-door {
+  position: absolute;
+  inset: 0;
+  width: 50%;
+  backface-visibility: hidden;
+  transform-style: preserve-3d;
+  will-change: transform, opacity;
+}
+.gate-door--left {
+  left: 0;
+  transform-origin: left center;
+}
+.gate-door--right {
+  right: 0;
+  left: auto;
+  transform-origin: right center;
+}
+.gate-open .gate-door--left {
+  animation: gate-open-left 2.4s var(--ease) forwards;
+}
+.gate-open .gate-door--right {
+  animation: gate-open-right 2.4s var(--ease) forwards;
+}
+@keyframes gate-open-left {
+  from { transform: rotateY(0); opacity: 1; }
+  to { transform: rotateY(-108deg); opacity: 0.22; }
+}
+@keyframes gate-open-right {
+  from { transform: rotateY(0); opacity: 1; }
+  to { transform: rotateY(108deg); opacity: 0.22; }
+}
+
+/* ── Sonar-pulse map pin ───────────────────────────────────────── */
+.pin-dot {
+  position: relative;
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--accent, #d4af37);
+}
+.pin-dot::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: var(--accent, #d4af37);
+  animation: pin-pulse 2s ease-out infinite;
+}
+@keyframes pin-pulse {
+  0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent, #d4af37) 45%, transparent); }
+  100% { box-shadow: 0 0 0 16px transparent; }
+}
+
+/* Countdown digit flip on change */
+.count-pop {
+  animation: count-pop 0.4s var(--ease);
+}
+@keyframes count-pop {
+  0% { transform: translateY(-40%); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gate-open .gate-door--left,
+  .gate-open .gate-door--right,
+  .count-pop,
+  .pin-dot::after {
+    animation: none;
+  }
+  [data-animate] {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
 }

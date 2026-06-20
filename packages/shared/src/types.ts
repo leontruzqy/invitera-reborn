@@ -1,5 +1,8 @@
 import type {
   AttendanceStatus,
+  GiftAccountType,
+  HeroStyle,
+  MediaSlot,
   MediaType,
   OrderStatus,
   PackageType,
@@ -45,18 +48,80 @@ export interface Invitation {
   customerId: number;
   orderId: number | null;
   slug: string;
+  /** Full names, e.g. "Rani Maharani". */
   brideName: string;
   groomName: string;
+  /** Short hero/cover display names, e.g. "Rani". Falls back to brideName. */
+  brideShortName: string | null;
+  groomShortName: string | null;
+  /** Parents line, e.g. "Bapak H. Bambang Wijaya & Ibu Hj. Dewi Lestari". */
+  brideParents: string | null;
+  groomParents: string | null;
+  /** Small role label under the name, e.g. "Putri dari Pasangan". */
+  brideTagline: string | null;
+  groomTagline: string | null;
+  /** Primary event date — drives the countdown and hero date. */
   eventDate: string | null;
+  /** Main venue (hero/location summary). */
   venueName: string | null;
   venueAddress: string | null;
   mapsUrl: string | null;
+  /** Opening section copy. */
+  openingGreeting: string | null;
+  verseArabic: string | null;
+  verseTranslation: string | null;
+  verseReference: string | null;
+  /** Footer closing paragraph. */
+  closingMessage: string | null;
+  hashtag: string | null;
+  /** RSVP confirm-by date. */
+  rsvpDeadline: string | null;
   templateKey: TemplateKey;
   themeConfigJson: string;
   isPublished: boolean;
   createdAt: string;
   customer?: Customer;
   order?: Order | null;
+}
+
+/** A ceremony in the schedule, e.g. Akad Nikah or Resepsi. */
+export interface InvitationEvent {
+  id: number;
+  invitationId: number;
+  name: string;
+  eventDate: string | null;
+  /** Free-text time label, e.g. "09.00 – 10.00 WIB". */
+  timeLabel: string | null;
+  venueName: string | null;
+  venueAddress: string | null;
+  mapsUrl: string | null;
+  sortOrder: number;
+  createdAt: string;
+}
+
+/** A love-story milestone. */
+export interface LoveStoryEvent {
+  id: number;
+  invitationId: number;
+  title: string;
+  /** Free-text time label, e.g. "2021". */
+  whenLabel: string | null;
+  description: string;
+  sortOrder: number;
+  createdAt: string;
+}
+
+/** A wedding-gift bank account or gift address. */
+export interface GiftAccount {
+  id: number;
+  invitationId: number;
+  type: GiftAccountType;
+  bankName: string | null;
+  accountNumber: string | null;
+  accountName: string | null;
+  address: string | null;
+  sortOrder: number;
+  createdAt: string;
 }
 
 export interface Guest {
@@ -93,6 +158,7 @@ export interface MediaAsset {
   id: number;
   invitationId: number;
   type: MediaType;
+  slot: MediaSlot;
   url: string;
   altText: string | null;
   sortOrder: number;
@@ -102,6 +168,9 @@ export interface MediaAsset {
 /** Invitation as served by GET /api/invitations/:slug */
 export interface PublicInvitation extends Invitation {
   media: MediaAsset[];
+  events: InvitationEvent[];
+  story: LoveStoryEvent[];
+  gifts: GiftAccount[];
   /** Approved wishes only. */
   wishes: Wish[];
   /** Present when the page is opened with ?guest=<unique_slug>. */
@@ -131,6 +200,14 @@ export interface ThemeConfig {
   accent?: string;
   /** Optional cover/hero image URL (overrides the first media asset). */
   coverImageUrl?: string;
+  /** Palette preset `[night, peacock, teal, gold]`. */
+  palette?: string[];
+  /** Hero presentation style. */
+  heroStyle?: HeroStyle;
+  /** Master toggle for animations / parallax. */
+  motion?: boolean;
+  /** Number of parallax birds in the background flock. */
+  birds?: number;
 }
 
 // Request payloads

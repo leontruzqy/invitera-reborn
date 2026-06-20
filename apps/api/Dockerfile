@@ -1,6 +1,7 @@
 # Production image for the Invitera API (Bun + Elysia)
 # Build from the repo root: docker build -f apps/api/Dockerfile .
-FROM oven/bun:1 AS base
+# Kept in lockstep with the other images (>= 1.3; see web/admin Dockerfiles).
+FROM oven/bun:1.3.14 AS base
 WORKDIR /app
 
 # Install dependencies from manifests only, for layer caching

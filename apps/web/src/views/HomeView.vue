@@ -16,7 +16,7 @@ import { RouterLink } from 'vue-router';
       mempelai.
     </p>
     <RouterLink
-      to="/aisyah-raka"
+      to="/rani-raka"
       class="mt-10 rounded-full border border-white/30 px-8 py-3 text-xs tracking-widest uppercase transition hover:bg-white hover:text-stone-900 animate-fade-up"
       style="animation-delay: 0.45s"
     >

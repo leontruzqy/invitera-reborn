@@ -1,51 +1,70 @@
 <script setup lang="ts">
-import { parseThemeConfig, type PublicInvitation } from '@invitera/shared';
+import { DEFAULT_PALETTE, parseThemeConfig, type PublicInvitation } from '@invitera/shared';
 import { computed } from 'vue';
+import { useRoute } from 'vue-router';
 import { formatEventDate } from '../lib/format';
+import Peacock from '../templates/rani-raka/art/Peacock.vue';
+import { EnvelopeIcon } from '../templates/rani-raka/art/icons';
 
-const props = defineProps<{ invitation: PublicInvitation }>();
+const props = defineProps<{ invitation: PublicInvitation; gone?: boolean }>();
 const emit = defineEmits<{ open: [] }>();
 
-const coverImage = computed(() => {
-  const theme = parseThemeConfig(props.invitation.themeConfigJson);
-  return theme.coverImageUrl ?? props.invitation.media[0]?.url ?? null;
+const route = useRoute();
+
+const theme = computed(() => parseThemeConfig(props.invitation.themeConfigJson));
+const paletteVars = computed<Record<string, string>>(() => {
+  const p =
+    theme.value.palette && theme.value.palette.length >= 4 ? theme.value.palette : DEFAULT_PALETTE;
+  const [night, peacock, teal, gold] = p;
+  return { '--night': night, '--peacock': peacock, '--teal': teal, '--gold': gold };
 });
 
-const guestName = computed(() => props.invitation.guest?.name ?? null);
+const brideShort = computed(
+  () => props.invitation.brideShortName || props.invitation.brideName,
+);
+const groomShort = computed(
+  () => props.invitation.groomShortName || props.invitation.groomName,
+);
+
+// Recipient: ?to= overrides, else the personalized guest, else a generic label.
+const recipient = computed(() => {
+  const to = typeof route.query.to === 'string' ? route.query.to.trim() : '';
+  return to || props.invitation.guest?.name || 'Tamu Undangan';
+});
+
+const twinkles = Array.from({ length: 22 }, () => ({
+  left: `${Math.random() * 100}%`,
+  top: `${Math.random() * 100}%`,
+  animationDelay: `${Math.random() * 3.5}s`,
+  animationDuration: `${2.6 + Math.random() * 2.4}s`,
+}));
 </script>
 
 <template>
-  <div
-    class="fixed inset-0 z-50 flex flex-col items-center justify-center overflow-hidden bg-stone-950 px-6 text-center text-white"
-  >
-    <img
-      v-if="coverImage"
-      :src="coverImage"
-      alt=""
-      class="absolute inset-0 h-full w-full object-cover opacity-40"
-    />
-    <div class="relative flex flex-col items-center">
-      <p class="text-xs tracking-[0.4em] text-white/70 uppercase animate-fade-up">The Wedding Of</p>
-      <h1 class="mt-5 font-serif text-4xl sm:text-5xl animate-fade-up" style="animation-delay: 0.15s">
-        {{ invitation.brideName }}
-        <span class="text-white/60">&amp;</span>
-        {{ invitation.groomName }}
+  <div class="rr-root rr-cover" :class="{ gone }" :style="paletteVars" data-screen-label="Cover">
+    <div class="twinkles">
+      <span v-for="(t, i) in twinkles" :key="i" class="twinkle" :style="t" />
+    </div>
+    <div class="cover-frame"></div>
+    <div class="cover-inner">
+      <span class="eyebrow hero-eyebrow">Undangan Pernikahan</span>
+      <div class="cover-peacock"><Peacock :fan="9" /></div>
+      <h1 class="script cover-names">
+        {{ brideShort }} <span class="amp">&amp;</span> {{ groomShort }}
       </h1>
-      <p class="mt-4 text-sm text-white/70 animate-fade-up" style="animation-delay: 0.3s">
-        {{ formatEventDate(invitation.eventDate) }}
-      </p>
-      <div v-if="guestName" class="mt-8 animate-fade-up" style="animation-delay: 0.45s">
-        <p class="text-xs text-white/60">Kepada Yth. Bapak/Ibu/Saudara/i</p>
-        <p class="mt-1 text-lg font-medium">{{ guestName }}</p>
+      <p class="hero-date">{{ formatEventDate(invitation.eventDate) }}</p>
+      <div class="divider">
+        <span class="line"></span><span class="dot">✦</span><span class="line r"></span>
       </div>
-      <button
-        type="button"
-        class="mt-10 rounded-full border border-white/40 bg-white/10 px-8 py-3 text-xs tracking-[0.25em] uppercase backdrop-blur transition hover:bg-white/25 animate-fade-up animate-float-slow"
-        style="animation-delay: 0.6s"
-        @click="emit('open')"
-      >
-        Buka Undangan
+      <p class="cover-to">Kepada Yth.</p>
+      <p class="cover-to-sub">Bapak / Ibu / Saudara/i</p>
+      <p class="cover-recipient script">{{ recipient }}</p>
+      <button class="btn solid open-btn" type="button" @click="emit('open')">
+        <EnvelopeIcon /> Buka Undangan
       </button>
+      <p class="cover-note">
+        Mohon maaf apabila terdapat kesalahan penulisan nama &amp; gelar
+      </p>
     </div>
   </div>
 </template>

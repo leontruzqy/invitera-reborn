@@ -1,5 +1,15 @@
 import { and, asc, desc, eq } from 'drizzle-orm';
-import { db, guests, invitations, mediaAssets, rsvps, wishes } from '@invitera/db';
+import {
+  db,
+  giftAccounts,
+  guests,
+  invitationEvents,
+  invitations,
+  loveStoryEvents,
+  mediaAssets,
+  rsvps,
+  wishes,
+} from '@invitera/db';
 import { Elysia, t } from 'elysia';
 
 const slugParams = t.Object({ slug: t.String({ minLength: 1, maxLength: 64 }) });
@@ -18,6 +28,9 @@ export const publicRoutes = new Elysia({ prefix: '/api/invitations' })
         where: and(eq(invitations.slug, params.slug), eq(invitations.isPublished, true)),
         with: {
           media: { orderBy: [asc(mediaAssets.sortOrder)] },
+          events: { orderBy: [asc(invitationEvents.sortOrder)] },
+          story: { orderBy: [asc(loveStoryEvents.sortOrder)] },
+          gifts: { orderBy: [asc(giftAccounts.sortOrder)] },
           wishes: {
             where: eq(wishes.status, 'approved'),
             orderBy: [desc(wishes.createdAt)],

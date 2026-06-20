@@ -1,4 +1,4 @@
-import type { TemplateKey } from '@invitera/shared';
+import { DEFAULT_TEMPLATE_KEY, type TemplateKey } from '@invitera/shared';
 import { defineAsyncComponent, type Component } from 'vue';
 
 /**
@@ -7,9 +7,7 @@ import { defineAsyncComponent, type Component } from 'vue';
  * (plus adding the key to TEMPLATE_KEYS in @invitera/shared).
  */
 export const templateRegistry: Record<TemplateKey, Component> = {
-  'modern-minimal': defineAsyncComponent(() => import('./ModernMinimal.vue')),
-  'floral-elegant': defineAsyncComponent(() => import('./FloralElegant.vue')),
-  'javanese-classic': defineAsyncComponent(() => import('./JavaneseClassic.vue')),
-  'islamic-clean': defineAsyncComponent(() => import('./IslamicClean.vue')),
-  'luxury-dark': defineAsyncComponent(() => import('./LuxuryDark.vue')),
+  'rani-raka': defineAsyncComponent(() => import('./RaniRaka.vue')),
 };
+
+export const fallbackTemplate = templateRegistry[DEFAULT_TEMPLATE_KEY];
